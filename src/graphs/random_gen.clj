@@ -1,7 +1,7 @@
 (ns graphs.random-gen
   (:require [clojure.set :refer :all]))
 
-(defonce max-weight (atom 10))
+(defonce ^:private max-weight (atom 10))
 (defn set-max-weight!
   "Since there's no basic restrictions on the edge weight, use this function to set it's maximum"
   [x]
@@ -23,19 +23,41 @@
 
 (def peek-rand (comp rand-nth seq))
 
+(defn available-verts
+  ([entry all]
+   (let [start (key entry)
+         ends (keys (val entry))]
+     (available-verts start ends all)))
+
+  ([start ends all]
+   (let [used (cons start ends)]
+     (->> (map set [all used])
+          (apply difference)))))
+
+(defn full?
+  [entry all]
+  (empty? (available-verts entry all)))
+
+(defn rand-non-full-vertice
+  [graph]
+  (let [all (keys graph)]
+    (-> (remove #(full? % all) graph)
+        ((comp rand-nth keys)))))
+
 (defn rand2-diff
-  [coll]
-  (let [first  (peek-rand coll)
-        second (peek-rand (disj coll first))]
-    [first, second]))
+  [graph]
+  (let [all (keys graph)
+        start (rand-non-full-vertice graph)
+        valid-ends (available-verts start (keys (start graph)) all)]
+    [start, (peek-rand valid-ends)]))
 
 (defn select-verts
-  [graph all-v]
-  (let [used-v (keys graph)
-        unused-v (difference all-v used-v)]
-    (if (empty? unused-v)
-      (rand2-diff all-v)
-      (-> (map peek-rand [used-v unused-v])
+  [graph all]
+  (let [used (keys graph)
+        unused (difference all used)]
+    (if (empty? unused)
+      (rand2-diff graph)
+      (-> (map peek-rand [used unused])
           (shuffle)))))
 
 (defn build-recur
