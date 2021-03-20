@@ -1,4 +1,6 @@
-(ns graphs.dijkstra)
+(ns graphs.dijkstra
+  (:require [clojure.zip :as zip]
+            [graphs.random-gen :as gen]))
 
 (defn scratch-routes
   [graph]
@@ -28,3 +30,24 @@
     
     (println (reduce update-routes (:routes step-info) neighbors)))
   #_(print @routes-map))
+
+(defn any-outgoing-visited?
+  [graph ]
+  )
+
+(defn end?
+  [graph-info vertice]
+  #_(let [{:keys [graph start end]} graph-info]
+      (and
+       (not= vertice end)     
+       (any-outgoing-visited? graph vertice)))
+  (= vertice (:end graph-info)))
+
+(defn graph-zipper
+  [graph start end]
+  (zip/zipper #((complement end?) {:graph graph
+                                   :start start
+                                   :end end} %)
+          #(-> % graph keys)
+          nil
+          start))
