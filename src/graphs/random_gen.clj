@@ -62,7 +62,6 @@
 
 (defn build-recur
   [graph all-v edges-left]
-  #_(println graph)
   (if (= 0 edges-left)
     graph
     (let [[start, end] (select-verts graph all-v)]

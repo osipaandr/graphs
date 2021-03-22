@@ -86,7 +86,7 @@
           new-len (path-len graph (conj path vert))]
       (if (or
            (nil? cur-len)
-           (< cur-len new-len))
+           (> cur-len new-len))
         (swap! routes #(assoc % vert {:path path
                                       :length new-len
                                       :visited false}))))))
@@ -97,7 +97,6 @@
 
 (defn loc-children
   [loc]
-  (println loc)
   (when-let [loc-child (zip/down loc)]
     (->> loc-child
          (iterate zip/right)
@@ -110,8 +109,8 @@
            (fn [m]
              (update m vertice #(assoc % :visited true))))))
 
-; todo: test
-(defn shortest-path
+                                        ; todo: test
+(defn dijkstra
   [graph start end]
   (let [graph' (remove-edges-to (simplify graph start) start)
         g-zipper (graph-zipper graph' start)
@@ -122,21 +121,36 @@
         visited? (fn [loc]
                    (as-> loc x
                      (zip/node x)
-                     (x routes)
+                     (x @routes)
                      (:visited x)))
         find-children (fn []
                         (->> @locs-to-iterate
                              (mapcat loc-children)
-                             (remove visited?)))]
+                             (remove visited?)))
+; delete it
+        iters (atom 0)]
+    #_(mapcat loc-children @locs-to-iterate)
     (while (and
+            (> 15 @iters)
             (seq @locs-to-iterate)
-            (some :visited (map val @routes)))
-      (println "LOCS: "@locs-to-iterate)
-      (let [children (mapcat loc-children @locs-to-iterate)]
+            (not (every? :visited (map val @routes))))
+      #_(println @locs-to-iterate)
+      (let [children (find-children)]
         (mapv upd children)
-        (mapv visit @locs-to-iterate)
+        (mapv #(visit (zip/node %)) @locs-to-iterate)
+        (swap! iters inc)
         (reset! locs-to-iterate children)))
-    (dissoc (end @routes) :visited)))
+    (as-> (end @routes) x
+        (dissoc x :visited)
+        (if (nil? (:path x))
+          nil
+          (update x :path #(conj % end))))))
+
+(defn shortest-path
+  [graph start end]
+  (if (= start end)
+    {:path [], :length 0}
+    (dijkstra graph start end)))
 
 ; routes map sample
 (comment {:1 {:path [:3]
