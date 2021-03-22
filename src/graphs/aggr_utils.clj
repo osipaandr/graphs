@@ -2,7 +2,7 @@
 
 (defn nil-safe-aggr
   [fun coll]
-  (if-let [numbers (seq (remove nil? coll))]
+  (if-let [numbers (seq (filter number? coll))]
     (apply fun numbers)
     nil))
 
