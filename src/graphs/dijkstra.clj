@@ -109,7 +109,6 @@
            (fn [m]
              (update m vertice #(assoc % :visited true))))))
 
-                                        ; todo: test
 (defn dijkstra
   [graph start end]
   (let [graph' (remove-edges-to (simplify graph start) start)
@@ -126,24 +125,18 @@
         find-children (fn []
                         (->> @locs-to-iterate
                              (mapcat loc-children)
-                             (remove visited?)))
-; delete it
-        iters (atom 0)]
-    #_(mapcat loc-children @locs-to-iterate)
+                             (remove visited?)))]
     (while (and
-            (> 15 @iters)
             (seq @locs-to-iterate)
             (not (every? :visited (map val @routes))))
-      #_(println @locs-to-iterate)
       (let [children (find-children)]
         (mapv upd children)
         (mapv #(visit (zip/node %)) @locs-to-iterate)
-        (swap! iters inc)
         (reset! locs-to-iterate children)))
     (as-> (end @routes) x
         (dissoc x :visited)
         (if (nil? (:path x))
-          nil
+          (println "No path found between vertices" start "and" end)
           (update x :path #(conj % end))))))
 
 (defn shortest-path
@@ -161,4 +154,6 @@
               :visited true}
           :3 {:path nil
               :length nil
-              :visited false}})
+              :visited false}
+          ;; etc
+          })

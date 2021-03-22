@@ -1,13 +1,15 @@
 (ns graphs.graph-utils
-  (:require [graphs.brute-force :as brf]
+  (:require
+;            [graphs.brute-force :as brf]
 ;            [graphs.random-gen :refer [make-graph]]
-            [graphs.aggr-utils :refer :all]))
+            [graphs.aggr-utils :refer :all]
+            [graphs.dijkstra :refer [shortest-path]]))
 
 (defn eccentricity
   [graph vertice]
   (nil-safe-max
    (map
-    #(brf/shortest-path graph vertice %)
+    #(:length (shortest-path graph vertice %))
     (remove #(= vertice %) (keys graph)))))
 
 (defn aggregate-eccentricity
